@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "EXPO_NO_TELEMETRY=1 expo start",
+    "dev": "expo start --tunnel",
+    "dev:no-telemetry": "cross-env EXPO_NO_TELEMETRY=1 expo start",
     "build:web": "expo export --platform web",
     "lint": "expo lint"
   },
@@ -45,6 +46,8 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~18.3.12",
+    "cross-env": "^7.0.3",
     "typescript": "^5.3.3"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
