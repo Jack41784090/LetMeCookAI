@@ -1,12 +1,28 @@
+import { saveImageToLocalStorage } from '@/hooks/useLocalImages';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { Download, Share2 } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Result() {
-  const { image } = useLocalSearchParams<{ image: string }>();
+  const { image, style } = useLocalSearchParams<{ image: string; style?: string }>();
   const router = useRouter();
+  const [savedLocally, setSavedLocally] = useState(false);
+
+  // Save the image to local storage when component mounts
+  useEffect(() => {
+    const saveToLocal = async () => {
+      try {
+        await saveImageToLocalStorage(image, style);
+        setSavedLocally(true);
+      } catch (error) {
+        console.error('Failed to save image locally:', error);
+      }
+    };
+    saveToLocal();
+  }, [image, style]);
 
   const handleShare = async () => {
     try {
@@ -24,13 +40,7 @@ export default function Result() {
         return;
       }
       const asset = await MediaLibrary.createAssetAsync(image);
-      let album = await MediaLibrary.getAlbumAsync('LetMeCookAI');
-      if (!album) {
-        await MediaLibrary.createAlbumAsync('LetMeCookAI', asset, false);
-      } else {
-        await MediaLibrary.addAssetsToAlbumAsync([asset], album.id, false);
-      }
-      Alert.alert('Success', 'Image saved to gallery');
+      Alert.alert('Success', 'Image saved to device gallery');
     } catch (error) {
       console.error('Error saving image', error);
     }
@@ -58,9 +68,15 @@ export default function Result() {
 
         <TouchableOpacity style={styles.button} onPress={handleSave}>
           <Download color="white" size={24} />
-          <Text style={styles.buttonText}>Save</Text>
+          <Text style={styles.buttonText}>Save to Device</Text>
         </TouchableOpacity>
       </View>
+
+      {savedLocally && (
+        <Text style={styles.savedText}>
+          Image saved to app's gallery
+        </Text>
+      )}
 
       <TouchableOpacity
         style={styles.newPhotoButton}
@@ -107,6 +123,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     marginLeft: 10,
+  },
+  savedText: {
+    color: '#43a047',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
   },
   newPhotoButton: {
     backgroundColor: '#007AFF',

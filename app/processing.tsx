@@ -1,14 +1,14 @@
-import { useEffect } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import Animated, { 
-  useAnimatedStyle, 
-  withRepeat, 
-  withSequence, 
-  withTiming,
-  useSharedValue
-} from 'react-native-reanimated';
 import { Wand as Wand2 } from 'lucide-react-native';
+import { useEffect } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming
+} from 'react-native-reanimated';
 
 export default function Processing() {
   const { image, style } = useLocalSearchParams<{ image: string; style: string }>();

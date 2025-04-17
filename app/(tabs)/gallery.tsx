@@ -1,41 +1,32 @@
-import * as MediaLibrary from 'expo-media-library';
+import { useLocalImages, type LocalImage } from '@/hooks/useLocalImages';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function GalleryScreen() {
-  const [photos, setPhotos] = useState<MediaLibrary.Asset[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { images, isLoading, refreshImages } = useLocalImages();
   const router = useRouter();
+  const [isFocused, setIsFocused] = useState(true);
 
-  const handleSelect = async (item: MediaLibrary.Asset) => {
-    const info = await MediaLibrary.getAssetInfoAsync(item);
-    const uri = info.localUri ?? item.uri;
-    router.push({ pathname: '/result', params: { image: uri } });
+  // Refresh images when component mounts and when it becomes visible
+  useEffect(() => {
+    refreshImages();
+    
+    // This will run when the component mounts (becomes visible)
+    setIsFocused(true);
+    
+    return () => {
+      // This will run when component unmounts (becomes invisible)
+      setIsFocused(false);
+    };
+  }, [refreshImages]);
+
+  const handleSelect = (item: LocalImage) => {
+    router.push({ pathname: '/result', params: { image: item.uri, style: item.style } });
   };
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        setLoading(false);
-        return;
-      }
-      const album = await MediaLibrary.getAlbumAsync('LetMeCookAI');
-      if (album) {
-        const assets = await MediaLibrary.getAssetsAsync({
-          album: album.id,
-          mediaType: ['photo'],
-          first: 100,
-          sortBy: [MediaLibrary.SortBy.creationTime],
-        });
-        setPhotos(assets.assets);
-      }
-      setLoading(false);
-    })();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#fff" />
@@ -43,25 +34,27 @@ export default function GalleryScreen() {
     );
   }
 
-  if (photos.length === 0) {
+  if (images.length === 0) {
     return (
       <View style={styles.center}>
-        <Text style={styles.text}>No photos found</Text>
+        <Text style={styles.text}>No transformed images yet</Text>
       </View>
     );
   }
 
   return (
     <FlatList
-      data={photos}
+      data={images}
       keyExtractor={(item) => item.id}
-      numColumns={3}
+      numColumns={1}
       renderItem={({ item }) => (
         <TouchableOpacity onPress={() => handleSelect(item)}>
           <Image source={{ uri: item.uri }} style={styles.photo} />
         </TouchableOpacity>
       )}
       contentContainerStyle={styles.list}
+      onRefresh={refreshImages}
+      refreshing={isLoading}
     />
   );
 }
@@ -81,9 +74,9 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   photo: {
-    width: '32%',
+    width: '100%',
     aspectRatio: 1,
-    margin: '1%',
+    marginVertical: 8,
     borderRadius: 8,
   },
 });

@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const styles = [
   { id: 'vangogh', name: 'Van Gogh', description: 'Post-impressionist style with bold colors and expressive brushstrokes' },
