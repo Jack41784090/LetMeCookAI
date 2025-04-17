@@ -1,17 +1,39 @@
-import { StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
+import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import { Download, Share2 } from 'lucide-react-native';
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Result() {
   const { image } = useLocalSearchParams<{ image: string }>();
   const router = useRouter();
 
   const handleShare = async () => {
-    // Implement sharing functionality
+    try {
+      await Sharing.shareAsync(image);
+    } catch (error) {
+      console.error('Error sharing', error);
+    }
   };
 
   const handleSave = async () => {
-    // Implement save to gallery functionality
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Need permission to save images');
+        return;
+      }
+      const asset = await MediaLibrary.createAssetAsync(image);
+      let album = await MediaLibrary.getAlbumAsync('LetMeCookAI');
+      if (!album) {
+        await MediaLibrary.createAlbumAsync('LetMeCookAI', asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album.id, false);
+      }
+      Alert.alert('Success', 'Image saved to gallery');
+    } catch (error) {
+      console.error('Error saving image', error);
+    }
   };
 
   const handleNewPhoto = () => {
