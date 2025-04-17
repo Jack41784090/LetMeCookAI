@@ -1,25 +1,25 @@
-import { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Platform } from 'react-native';
-import { Camera as CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { Camera, Image as ImageIcon, Wand as Wand2 } from 'lucide-react-native';
+import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
+import { Image as ImageIcon, SwitchCameraIcon, Wand as Wand2 } from 'lucide-react-native';
+import { useEffect, useState } from 'react';
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
-  const [cameraType, setCameraType] = useState<CameraType>(CameraType.back);
+  const [cameraType, setCameraType] = useState<CameraType>('back');
   const router = useRouter();
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
 
   useEffect(() => {
     if (Platform.OS !== 'web' && permission?.granted) {
-      setCameraType(CameraType.back);
+      setCameraType('back');
     }
   }, [permission]);
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       quality: 1,
     });
 
@@ -36,6 +36,7 @@ export default function CameraScreen() {
 
     try {
       const photo = await cameraRef.takePictureAsync();
+      if (!photo) throw new Error('Failed to take picture');
       router.push({
         pathname: '/style-selection',
         params: { image: photo.uri }
@@ -48,9 +49,9 @@ export default function CameraScreen() {
   const toggleCameraType = () => {
     if (Platform.OS !== 'web') {
       setCameraType(current => (
-        current === CameraType.back
-          ? CameraType.front
-          : CameraType.back
+        current === ImagePicker.CameraType.back
+          ? ImagePicker.CameraType.front
+          : ImagePicker.CameraType.back
       ));
     }
   };
@@ -86,13 +87,12 @@ export default function CameraScreen() {
       <CameraView
         ref={setCameraRef}
         style={styles.camera}
-        type={cameraType}
       >
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.iconButton}
             onPress={toggleCameraType}>
-            <Camera color="white" size={24} />
+            <SwitchCameraIcon color="white" size={24} />
           </TouchableOpacity>
           
           <TouchableOpacity
