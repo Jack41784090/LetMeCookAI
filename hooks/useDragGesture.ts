@@ -1,4 +1,4 @@
-import { Dimensions } from 'react-native';
+import { Dimensions, LayoutRectangle } from 'react-native';
 import { Gesture } from 'react-native-gesture-handler';
 import {
   runOnJS,
@@ -9,7 +9,7 @@ import {
 } from 'react-native-reanimated';
 import { stylesData } from '../utils/styles-selection/StylesData';
 
-// Screen dimensions for pot position calculation
+// Screen dimensions
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
@@ -26,7 +26,8 @@ interface StylePosition {
 export function useDragGesture(
   onAddStyle: (id: string) => void,
   onDragStart: () => void,
-  onDragEnd: () => void
+  onDragEnd: () => void,
+  potLayout: SharedValue<LayoutRectangle | null> // Pass the image container layout
 ) {
   // Shared value to track if item is over pot
   const isOverPot = useSharedValue(false);
@@ -46,13 +47,17 @@ export function useDragGesture(
         { translateX: pos.translateX.value },
         { translateY: pos.translateY.value },
       ],
+      zIndex: isOverPot.value ? 5 : 1,
     }))
   );
 
-  // Create animated style for the pot
-  const potStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: withSpring(isOverPot.value ? 1.2 : 1) }],
-    opacity: withSpring(isOverPot.value ? 1 : 0.8),
+  // Create animated style for the pot image overlay
+  const potOverlayStyle = useAnimatedStyle(() => ({
+    backgroundColor: isOverPot.value 
+      ? 'rgba(0, 122, 255, 0.3)' 
+      : 'rgba(0, 0, 0, 0.3)',
+    borderBottomLeftRadius: 100,
+    borderBottomRightRadius: 100,
   }));
 
   // Get position by style id
@@ -73,19 +78,16 @@ export function useDragGesture(
         position.translateX.value = event.translationX;
         position.translateY.value = event.translationY;
 
-        // Check if over the pot area
-        const potArea = {
-          x: windowWidth / 2 - 50,
-          y: windowHeight - 200,
-          width: 100,
-          height: 100,
-        };
-
-        isOverPot.value =
-          event.absoluteX >= potArea.x &&
-          event.absoluteX <= potArea.x + potArea.width &&
-          event.absoluteY >= potArea.y &&
-          event.absoluteY <= potArea.y + potArea.height;
+        // Check if over the pot (image) area using the measured layout
+        if (potLayout.value) {
+          const pot = potLayout.value;
+          
+          isOverPot.value =
+            event.absoluteX >= pot.x &&
+            event.absoluteX <= pot.x + pot.width &&
+            event.absoluteY >= pot.y &&
+            event.absoluteY <= pot.y + pot.height;
+        }
       })
       .onEnd(() => {
         if (isOverPot.value) {
@@ -101,7 +103,8 @@ export function useDragGesture(
   return {
     styles,
     animatedStyles,
-    potStyle,
+    potOverlayStyle,
     createPanGesture,
+    isOverPot,
   };
 }

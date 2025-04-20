@@ -11,14 +11,75 @@ export const styleSheet = StyleSheet.create({
   },
   imageContainer: {
     height: 300,
-    backgroundColor: '#000',
-    borderRadius: 15,
-    overflow: 'hidden',
+    backgroundColor: '#333',
+    borderRadius: 0,
     marginBottom: 20,
+    borderBottomLeftRadius: 60,
+    borderBottomRightRadius: 60,
+    paddingTop: 20,
+    position: 'relative',
+  },
+  potHandleLeft: {
+    position: 'absolute',
+    left: -15,
+    top: '40%',
+    height: 60,
+    width: 30,
+    backgroundColor: '#333',
+    borderRadius: 15,
+    zIndex: 1,
+  },
+  potHandleRight: {
+    position: 'absolute',
+    right: -15,
+    top: '40%',
+    height: 60,
+    width: 30,
+    backgroundColor: '#333',
+    borderRadius: 15,
+    zIndex: 1,
   },
   image: {
     width: '100%',
     height: '100%',
+    borderBottomLeftRadius: 100,
+    borderBottomRightRadius: 100,
+    overflow: 'hidden', // Move overflow to image instead of container
+  },
+  imageOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderBottomLeftRadius: 100,
+    borderBottomRightRadius: 100,
+  },
+  imageOverlayActive: {
+    backgroundColor: 'rgba(0, 122, 255, 0.3)',
+  },
+  badge: {
+    position: 'absolute',
+    top: -5, // Move badge up slightly to make it more visible
+    right: -5, // Move badge right slightly to make it more visible
+    backgroundColor: '#007AFF',
+    borderRadius: 15,
+    width: 30, // Make badge slightly larger
+    height: 30, // Make badge slightly larger
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20, // Increased z-index to ensure it's on top
+    elevation: 5, // Add elevation for Android
+    shadowColor: '#000', // Add shadow for iOS
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   title: {
     fontSize: 24,
@@ -54,31 +115,8 @@ export const styleSheet = StyleSheet.create({
     fontSize: 14,
     color: '#ccc',
   },
-  potContainer: {
-    position: 'absolute',
-    bottom: 100,
-    alignSelf: 'center',
-    backgroundColor: '#333',
-    borderRadius: 30,
-    padding: 20,
-  },
-  badge: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
   transformButton: {
+    zIndex: 10,
     backgroundColor: '#007AFF',
     padding: 15,
     borderRadius: 10,
