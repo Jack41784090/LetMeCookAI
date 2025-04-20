@@ -90,12 +90,29 @@ export const styleSheet = StyleSheet.create({
   styleList: {
     flex: 1,
   },
+  // New carousel styles
+  carouselContainer: {
+    marginBottom: 20,
+    height: 120, // Fixed height for carousel container
+  },
+  carouselTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  carousel: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+    minWidth: '100%', // Ensure it takes full width even when empty
+  },
   styleButton: {
     backgroundColor: '#333',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    flexDirection: 'row',
+    width: 80,  // Fixed width for circular buttons
+    height: 80, // Same as width to make it circular
+    borderRadius: 40, // Half of width/height for perfect circle
+    marginRight: 15,
+    justifyContent: 'center',
     alignItems: 'center',
   },
   selectedStyle: {
@@ -103,17 +120,24 @@ export const styleSheet = StyleSheet.create({
     opacity: 0.8,
   },
   styleIcon: {
-    marginRight: 10,
+    marginBottom: 5,
   },
   styleName: {
-    fontSize: 18,
+    fontSize: 12, // Smaller font for circular buttons
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 5,
+    textAlign: 'center',
+    maxWidth: 70, // Ensure text doesn't overflow
   },
   styleDescription: {
     fontSize: 14,
     color: '#ccc',
+  },
+  emptyMessage: {
+    color: '#888',
+    fontStyle: 'italic',
+    alignSelf: 'center',
+    paddingVertical: 10,
   },
   transformButton: {
     zIndex: 10,

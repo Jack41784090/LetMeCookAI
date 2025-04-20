@@ -1,10 +1,11 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Sparkles } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { Image, LayoutChangeEvent, Text, TouchableOpacity, View } from 'react-native';
+import { Image, LayoutChangeEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import { useDragGesture } from '../hooks/useDragGesture';
+import { stylesData } from '../utils/styles-selection/StylesData';
 import { styleSheet } from '../utils/styles-selection/styleSheet';
 
 export default function StyleSelection() {
@@ -12,6 +13,15 @@ export default function StyleSelection() {
   const router = useRouter();
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  
+  // Get all available styles
+  const allStyles = stylesData.getStyles();
+  
+  // Filtered styles for top carousel (available styles)
+  const availableStyles = allStyles.filter(style => !selectedStyles.includes(style.id));
+  
+  // Filtered styles for bottom carousel (selected styles)
+  const selectedStylesData = allStyles.filter(style => selectedStyles.includes(style.id));
   
   // Track the pot's position and dimensions
   const potLayout = useSharedValue<null | {x: number; y: number; width: number; height: number}>(null);
@@ -22,6 +32,11 @@ export default function StyleSelection() {
       prev.includes(styleId) ? prev : [...prev, styleId]
     );
   };
+  
+  // Handler for removing a style from selection
+  const removeSelectedStyle = (styleId: string) => {
+    setSelectedStyles(prev => prev.filter(id => id !== styleId));
+  };
 
   // Handle measuring the pot (image container)
   const onPotLayout = useCallback((event: LayoutChangeEvent) => {
@@ -31,7 +46,7 @@ export default function StyleSelection() {
 
   // Use our custom hook for drag gesture handling
   const { 
-    styles, 
+    styles: allStylesWithGestures, 
     animatedStyles, 
     potOverlayStyle,
     createPanGesture 
@@ -54,10 +69,51 @@ export default function StyleSelection() {
       });
     }
   };
+  
+  // Get animated style for a specific style ID
+  const getAnimatedStyleForId = (styleId: string) => {
+    const index = allStylesWithGestures.findIndex(s => s.id === styleId);
+    return index >= 0 ? animatedStyles[index] : undefined;
+  };
 
   return (
     <GestureHandlerRootView style={styleSheet.container}>
       
+      {/* Available Styles Carousel - Fixed Height */}
+      <View style={styleSheet.carouselContainer}>
+        <Text style={styleSheet.carouselTitle}>Available Styles</Text>
+        <View style={{ height: 90 }}>
+          <ScrollView 
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styleSheet.carousel}
+          >
+            {availableStyles.length === 0 ? (
+              <Text style={styleSheet.emptyMessage}>No available styles</Text>
+            ) : (
+              availableStyles.map(style => {
+                // Create gesture handler for this style
+                const gesture = createPanGesture(style.id);
+                const animStyle = getAnimatedStyleForId(style.id);
+                
+                return (
+                  <GestureDetector key={style.id} gesture={gesture}>
+                    <Animated.View style={[
+                      styleSheet.styleButton,
+                      animStyle,
+                    ]}>
+                      <Sparkles color="#fff" size={20} style={styleSheet.styleIcon} />
+                      <Text numberOfLines={1} style={styleSheet.styleName}>{style.name}</Text>
+                    </Animated.View>
+                  </GestureDetector>
+                );
+              })
+            )}
+          </ScrollView>
+        </View>
+      </View>
+      
+      {/* Image Pot */}
       <View style={styleSheet.imageContainer} onLayout={onPotLayout}>
         <View style={styleSheet.potHandleLeft} />
         <View style={styleSheet.potHandleRight} />
@@ -77,29 +133,33 @@ export default function StyleSelection() {
         )}
       </View>
 
-      <View style={styleSheet.styleList}>
-        {styles.map((style, index) => {
-          // Create gesture handler for this style
-          const gesture = createPanGesture(style.id);
-          
-          return (
-            <GestureDetector key={style.id} gesture={gesture}>
-              <Animated.View style={[
-                styleSheet.styleButton,
-                selectedStyles.includes(style.id) && styleSheet.selectedStyle,
-                animatedStyles[index],
-              ]}>
-                <Sparkles color="#fff" size={20} style={styleSheet.styleIcon} />
-                <View>
-                  <Text style={styleSheet.styleName}>{style.name}</Text>
-                  {/* <Text style={styleSheet.styleDescription}>
-                    {style.description}
-                  </Text> */}
-                </View>
-              </Animated.View>
-            </GestureDetector>
-          );
-        })}
+      {/* Selected Styles Carousel - Fixed Height */}
+      <View style={styleSheet.carouselContainer}>
+        <Text style={styleSheet.carouselTitle}>Selected Styles</Text>
+        <View style={{ height: 90 }}>
+          <ScrollView 
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styleSheet.carousel}
+          >
+            {selectedStylesData.length === 0 ? (
+              <Text style={styleSheet.emptyMessage}>
+                Drag styles from above into the pot
+              </Text>
+            ) : (
+              selectedStylesData.map(style => (
+                <TouchableOpacity 
+                  key={style.id}
+                  style={[styleSheet.styleButton, styleSheet.selectedStyle]}
+                  onPress={() => removeSelectedStyle(style.id)}
+                >
+                  <Sparkles color="#fff" size={20} style={styleSheet.styleIcon} />
+                  <Text numberOfLines={1} style={styleSheet.styleName}>{style.name}</Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </ScrollView>
+        </View>
       </View>
 
       {selectedStyles.length > 0 && (
