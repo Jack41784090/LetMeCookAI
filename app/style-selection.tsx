@@ -5,6 +5,7 @@ import { Image, LayoutChangeEvent, ScrollView, Text, TouchableOpacity, View } fr
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue } from 'react-native-reanimated';
 import { useDragGesture } from '../hooks/useDragGesture';
+import { PhysicsStylePot } from '../utils/components/PhysicsStylePot';
 import { stylesData } from '../utils/styles-selection/StylesData';
 import { styleSheet } from '../utils/styles-selection/styleSheet';
 
@@ -113,7 +114,7 @@ export default function StyleSelection() {
         </View>
       </View>
       
-      {/* Image Pot */}
+      {/* Image Pot with Physics */}
       <View style={styleSheet.imageContainer} onLayout={onPotLayout}>
         <View style={styleSheet.potHandleLeft} />
         <View style={styleSheet.potHandleRight} />
@@ -126,40 +127,25 @@ export default function StyleSelection() {
         
         <Animated.View style={[styleSheet.imageOverlay, potOverlayStyle]} />
         
+        {/* Physics-based style circles */}
+        <PhysicsStylePot
+          imageUri={image}
+          selectedStyles={selectedStyles}
+          onRemoveStyle={removeSelectedStyle}
+          containerStyle={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+          }}
+        />
+        
         {selectedStyles.length > 0 && (
           <View style={styleSheet.badge}>
             <Text style={styleSheet.badgeText}>{selectedStyles.length}</Text>
           </View>
         )}
-      </View>
-
-      {/* Selected Styles Carousel - Fixed Height */}
-      <View style={styleSheet.carouselContainer}>
-        <Text style={styleSheet.carouselTitle}>Selected Styles</Text>
-        <View style={{ height: 90 }}>
-          <ScrollView 
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styleSheet.carousel}
-          >
-            {selectedStylesData.length === 0 ? (
-              <Text style={styleSheet.emptyMessage}>
-                Drag styles from above into the pot
-              </Text>
-            ) : (
-              selectedStylesData.map(style => (
-                <TouchableOpacity 
-                  key={style.id}
-                  style={[styleSheet.styleButton, styleSheet.selectedStyle]}
-                  onPress={() => removeSelectedStyle(style.id)}
-                >
-                  <Sparkles color="#fff" size={20} style={styleSheet.styleIcon} />
-                  <Text numberOfLines={1} style={styleSheet.styleName}>{style.name}</Text>
-                </TouchableOpacity>
-              ))
-            )}
-          </ScrollView>
-        </View>
       </View>
 
       {selectedStyles.length > 0 && (
@@ -168,8 +154,7 @@ export default function StyleSelection() {
           onPress={handleTransform}
         >
           <Text style={styleSheet.transformButtonText}>
-            Transform with {selectedStyles.length} style
-            {selectedStyles.length > 1 ? 's' : ''}
+            COOK
           </Text>
         </TouchableOpacity>
       )}
