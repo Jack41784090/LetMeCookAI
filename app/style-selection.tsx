@@ -79,15 +79,14 @@ export default function StyleSelection() {
 
   return (
     <GestureHandlerRootView style={styleSheet.container}>
-      
-      {/* Available Styles Carousel - Fixed Height */}
-      <View style={styleSheet.carouselContainer}>
-        <Text style={styleSheet.carouselTitle}>Available Styles</Text>
-        <View style={{ height: 90 }}>
+      <View style={styleSheet.mainContainer}>
+        {/* Available Styles Carousel - 20% height */}
+        <View style={styleSheet.carouselContainer}>
           <ScrollView 
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styleSheet.carousel}
+            style={{ alignSelf: 'center', width: '100%' }}
           >
             {availableStyles.length === 0 ? (
               <Text style={styleSheet.emptyMessage}>No available styles</Text>
@@ -112,52 +111,55 @@ export default function StyleSelection() {
             )}
           </ScrollView>
         </View>
-      </View>
-      
-      {/* Image Pot with Physics */}
-      <View style={styleSheet.imageContainer} onLayout={onPotLayout}>
-        <View style={styleSheet.potHandleLeft} />
-        <View style={styleSheet.potHandleRight} />
         
-        <Image
-          source={{ uri: image }}
-          style={styleSheet.image}
-          resizeMode="cover"
-        />
-        
-        <Animated.View style={[styleSheet.imageOverlay, potOverlayStyle]} />
-        
-        {/* Physics-based style circles */}
-        <PhysicsStylePot
-          imageUri={image}
-          selectedStyles={selectedStyles}
-          onRemoveStyle={removeSelectedStyle}
-          containerStyle={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-          }}
-        />
-        
-        {selectedStyles.length > 0 && (
-          <View style={styleSheet.badge}>
-            <Text style={styleSheet.badgeText}>{selectedStyles.length}</Text>
-          </View>
+        {/* Image Pot with Physics - 60% height */}
+        <View style={styleSheet.imageContainer} onLayout={onPotLayout}>
+          <View style={styleSheet.potHandleLeft} />
+          <View style={styleSheet.potHandleRight} />
+          
+          <Image
+            source={{ uri: image }}
+            style={styleSheet.image}
+            resizeMode="cover"
+          />
+          
+          <Animated.View style={[styleSheet.imageOverlay, potOverlayStyle]} />
+          
+          {/* Physics-based style circles */}
+          <PhysicsStylePot
+            imageUri={image}
+            selectedStyles={selectedStyles}
+            onRemoveStyle={removeSelectedStyle}
+            containerStyle={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          />
+          
+          {selectedStyles.length > 0 && (
+            <View style={styleSheet.badge}>
+              <Text style={styleSheet.badgeText}>{selectedStyles.length}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Transform button - 20% height */}
+        {selectedStyles.length > 0 ? (
+          <TouchableOpacity
+            style={styleSheet.transformButton}
+            onPress={handleTransform}
+          >
+            <Text style={styleSheet.transformButtonText}>
+              COOK
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={{height: '15%'}} /> // Empty space holder when button isn't visible
         )}
       </View>
-
-      {selectedStyles.length > 0 && (
-        <TouchableOpacity
-          style={styleSheet.transformButton}
-          onPress={handleTransform}
-        >
-          <Text style={styleSheet.transformButtonText}>
-            COOK
-          </Text>
-        </TouchableOpacity>
-      )}
     </GestureHandlerRootView>
   );
 }

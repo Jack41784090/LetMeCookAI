@@ -1,4 +1,7 @@
-import { StyleSheet } from 'react-native';
+import { Dimensions, StyleSheet } from 'react-native';
+
+// Get the screen dimensions for proportional layouts
+const { height: screenHeight } = Dimensions.get('window');
 
 /**
  * StyleSheet for the style selection screen
@@ -8,16 +11,53 @@ export const styleSheet = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1a1a1a',
     padding: 20,
+    paddingTop: 10, // Reduced top padding for better space utilization
+    paddingBottom: 10, // Reduced bottom padding for better space utilization
+    justifyContent: 'center', // Center the mainContainer vertically
+    alignItems: 'center', // Center the mainContainer horizontally
   },
+  mainContainer: {
+    height: screenHeight * 0.95, // 95% of screen height
+    width: '100%',
+    justifyContent: 'space-between', // Distribute space between children
+  },
+  // Top carousel container - 20% of the parent container
+  carouselContainer: {
+    height: '20%', // 20% of mainContainer
+  },
+  carouselTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  carousel: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+    minWidth: '100%', // Ensure it takes full width even when empty
+    alignItems: 'center', // Center items vertically within the row
+    justifyContent: 'center', // Center items horizontally
+  },
+  // Image container - 60% of the parent container
   imageContainer: {
-    height: 300,
+    height: '60%', // 60% of mainContainer
     backgroundColor: '#333',
     borderRadius: 0,
-    marginBottom: 20,
     borderBottomLeftRadius: 60,
     borderBottomRightRadius: 60,
     paddingTop: 20,
     position: 'relative',
+  },
+  // Transform button area - 20% of the parent container
+  transformButton: {
+    zIndex: 10,
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    height: '15%', // Slightly less than 20% to account for margins
   },
   potHandleLeft: {
     position: 'absolute',
@@ -90,22 +130,6 @@ export const styleSheet = StyleSheet.create({
   styleList: {
     flex: 1,
   },
-  // New carousel styles
-  carouselContainer: {
-    marginBottom: 20,
-    height: 120, // Fixed height for carousel container
-  },
-  carouselTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 10,
-  },
-  carousel: {
-    flexDirection: 'row',
-    paddingVertical: 10,
-    minWidth: '100%', // Ensure it takes full width even when empty
-  },
   styleButton: {
     backgroundColor: '#333',
     width: 80,  // Fixed width for circular buttons
@@ -138,14 +162,6 @@ export const styleSheet = StyleSheet.create({
     fontStyle: 'italic',
     alignSelf: 'center',
     paddingVertical: 10,
-  },
-  transformButton: {
-    zIndex: 10,
-    backgroundColor: '#007AFF',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 20,
   },
   transformButtonText: {
     color: 'white',
