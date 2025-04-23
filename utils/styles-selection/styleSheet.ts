@@ -40,7 +40,7 @@ export const styleSheet = StyleSheet.create({
   },
   // Image container
   imageContainer: {
-    height: '100%',
+    height: '60%',
     borderRadius: 0,
     borderBottomLeftRadius: 100,
     borderBottomRightRadius: 100,
