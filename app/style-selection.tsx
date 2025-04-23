@@ -137,47 +137,44 @@ export default function StyleSelection() {
           </ScrollView>
         </View>
         
-        {/* Animated pot container */}
-        <Animated.View style={[{width: '100%', height: '100%'}, animatedPotStyle]}>
-          {/* Image Pot with Physics - 60% height */}
-          <View style={styleSheet.imageContainer} onLayout={onPotLayout}>
-            <View style={styleSheet.potHandleLeft} />
-            <View style={styleSheet.potHandleRight} />
-            
-            <Image
-              source={{ uri: image }}
-              style={styleSheet.image}
-              resizeMode="cover"
-            />
-            
-            <Animated.View style={[styleSheet.imageOverlay, potOverlayStyle]} />
-            
-            {/* Physics-based style circles */}
-            <PhysicsStylePot
-              imageUri={image}
-              selectedStyles={selectedStyles}
-              onRemoveStyle={removeSelectedStyle}
-              containerStyle={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-              }}
-            />
-            
-            {selectedStyles.length > 0 && (
-              <View style={styleSheet.badge}>
-                <Text style={styleSheet.badgeText}>{selectedStyles.length}</Text>
-              </View>
-            )}
-          </View>
+        {/* Animated pot container 60% height*/}
+        <Animated.View style={[{width: '100%' }, styleSheet.imageContainer, animatedPotStyle]} onLayout={onPotLayout}>  
+          <View style={styleSheet.potHandleLeft} />
+          <View style={styleSheet.potHandleRight} />
+          
+          <Image
+            source={{ uri: image }}
+            style={styleSheet.image}
+            resizeMode="cover"
+          />
+          
+          <Animated.View style={[styleSheet.imageOverlay, potOverlayStyle]} />
+          
+          {/* Physics-based style circles */}
+          <PhysicsStylePot
+            imageUri={image}
+            selectedStyles={selectedStyles}
+            onRemoveStyle={removeSelectedStyle}
+            containerStyle={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
+          />
+          
+          {selectedStyles.length > 0 && (
+            <View style={styleSheet.badge}>
+              <Text style={styleSheet.badgeText}>{selectedStyles.length}</Text>
+            </View>
+          )}
         </Animated.View>
 
         {/* Cook button - 20% height */}
         {selectedStyles.length > 0 ? (
           <TouchableOpacity
-            style={styleSheet.transformButton}
+            style={[styleSheet.transformButton, { flex: 0.2 }]}
             onPress={handleCook}
           >
             <Text style={styleSheet.transformButtonText}>
@@ -185,7 +182,7 @@ export default function StyleSelection() {
             </Text>
           </TouchableOpacity>
         ) : (
-          <View style={{height: '15%'}} /> // Empty space holder when button isn't visible
+          <View style={{flex: 0.2}} /> // Empty space holder when button isn't visible
         )}
       </View>
     </GestureHandlerRootView>

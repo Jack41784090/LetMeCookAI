@@ -17,7 +17,7 @@ export const styleSheet = StyleSheet.create({
     alignItems: 'center', // Center the mainContainer horizontally
   },
   mainContainer: {
-    height: screenHeight * 0.95, // 95% of screen height
+    height: screenHeight * 0.9, // 95% of screen height
     width: '100%',
     justifyContent: 'space-between', // Distribute space between children
   },
@@ -38,20 +38,18 @@ export const styleSheet = StyleSheet.create({
     alignItems: 'center', // Center items vertically within the row
     justifyContent: 'center', // Center items horizontally
   },
-  // Image container - 60% of the parent container
+  // Image container
   imageContainer: {
-    height: '60%', // 60% of mainContainer
-    backgroundColor: '#333',
+    height: '100%',
     borderRadius: 0,
-    borderBottomLeftRadius: 60,
-    borderBottomRightRadius: 60,
+    borderBottomLeftRadius: 100,
+    borderBottomRightRadius: 100,
     paddingTop: 20,
     position: 'relative',
   },
   // Transform button area - 20% of the parent container
   transformButton: {
     zIndex: 10,
-    backgroundColor: '#007AFF',
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
