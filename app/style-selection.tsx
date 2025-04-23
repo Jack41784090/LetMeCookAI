@@ -1,19 +1,25 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Sparkles } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
-import { Image, LayoutChangeEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, LayoutChangeEvent, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import Animated, { useSharedValue } from 'react-native-reanimated';
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useDragGesture } from '../hooks/useDragGesture';
 import { PhysicsStylePot } from '../utils/components/PhysicsStylePot';
 import { stylesData } from '../utils/styles-selection/StylesData';
 import { styleSheet } from '../utils/styles-selection/styleSheet';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function StyleSelection() {
   const { image } = useLocalSearchParams<{ image: string }>();
   const router = useRouter();
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  
+  // Animation shared values for pot sliding
+  const potTranslateX = useSharedValue(0);
+  const potOpacity = useSharedValue(1);
   
   // Get all available styles
   const allStyles = stylesData.getStyles();
@@ -58,18 +64,37 @@ export default function StyleSelection() {
     potLayout
   );
 
-  // Handler for transform button
-  const handleTransform = () => {
+  // Navigate to kitchen (gallery) after animation
+  const navigateToKitchen = useCallback(() => {
+    // Navigate to gallery (kitchen) tab with the style and image params
+    router.navigate({
+      pathname: '/(tabs)/gallery',
+      params: {
+        image,
+        style: selectedStyles.join(','),
+      }
+    });
+  }, [router, image, selectedStyles]);
+
+  // Handler for cook button
+  const handleCook = useCallback(() => {
     if (selectedStyles.length > 0) {
-      router.push({
-        pathname: '/processing',
-        params: {
-          image,
-          style: selectedStyles.join(','),
-        },
+      // Animate the pot sliding right
+      potTranslateX.value = withTiming(SCREEN_WIDTH, { duration: 500 }, () => {
+        // Callback after animation is complete
+        potOpacity.value = withTiming(0, { duration: 200 });
+        runOnJS(navigateToKitchen)();
       });
     }
-  };
+  }, [selectedStyles, potTranslateX, navigateToKitchen]);
+
+  // Animated style for the pot container
+  const animatedPotStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: potTranslateX.value }],
+      opacity: potOpacity.value,
+    };
+  });
   
   // Get animated style for a specific style ID
   const getAnimatedStyleForId = (styleId: string) => {
@@ -112,45 +137,48 @@ export default function StyleSelection() {
           </ScrollView>
         </View>
         
-        {/* Image Pot with Physics - 60% height */}
-        <View style={styleSheet.imageContainer} onLayout={onPotLayout}>
-          <View style={styleSheet.potHandleLeft} />
-          <View style={styleSheet.potHandleRight} />
-          
-          <Image
-            source={{ uri: image }}
-            style={styleSheet.image}
-            resizeMode="cover"
-          />
-          
-          <Animated.View style={[styleSheet.imageOverlay, potOverlayStyle]} />
-          
-          {/* Physics-based style circles */}
-          <PhysicsStylePot
-            imageUri={image}
-            selectedStyles={selectedStyles}
-            onRemoveStyle={removeSelectedStyle}
-            containerStyle={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-            }}
-          />
-          
-          {selectedStyles.length > 0 && (
-            <View style={styleSheet.badge}>
-              <Text style={styleSheet.badgeText}>{selectedStyles.length}</Text>
-            </View>
-          )}
-        </View>
+        {/* Animated pot container */}
+        <Animated.View style={[{width: '100%', height: '100%'}, animatedPotStyle]}>
+          {/* Image Pot with Physics - 60% height */}
+          <View style={styleSheet.imageContainer} onLayout={onPotLayout}>
+            <View style={styleSheet.potHandleLeft} />
+            <View style={styleSheet.potHandleRight} />
+            
+            <Image
+              source={{ uri: image }}
+              style={styleSheet.image}
+              resizeMode="cover"
+            />
+            
+            <Animated.View style={[styleSheet.imageOverlay, potOverlayStyle]} />
+            
+            {/* Physics-based style circles */}
+            <PhysicsStylePot
+              imageUri={image}
+              selectedStyles={selectedStyles}
+              onRemoveStyle={removeSelectedStyle}
+              containerStyle={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+              }}
+            />
+            
+            {selectedStyles.length > 0 && (
+              <View style={styleSheet.badge}>
+                <Text style={styleSheet.badgeText}>{selectedStyles.length}</Text>
+              </View>
+            )}
+          </View>
+        </Animated.View>
 
-        {/* Transform button - 20% height */}
+        {/* Cook button - 20% height */}
         {selectedStyles.length > 0 ? (
           <TouchableOpacity
             style={styleSheet.transformButton}
-            onPress={handleTransform}
+            onPress={handleCook}
           >
             <Text style={styleSheet.transformButtonText}>
               COOK

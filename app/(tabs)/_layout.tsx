@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { Camera, Image as ImageIcon } from 'lucide-react-native';
+import { Camera, CookingPot } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
@@ -25,9 +25,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="gallery"
         options={{
-          title: 'Gallery',
+          title: 'Kitchen',
           tabBarIcon: ({ size, color }) => (
-            <ImageIcon size={size} color={color} />
+            <CookingPot size={size} color={color} />
           ),
         }}
       />
