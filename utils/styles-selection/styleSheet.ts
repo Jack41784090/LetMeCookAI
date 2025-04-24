@@ -17,13 +17,13 @@ export const styleSheet = StyleSheet.create({
     alignItems: 'center', // Center the mainContainer horizontally
   },
   mainContainer: {
-    height: screenHeight * 0.9, // 95% of screen height
+    flex: 1, // Use flex: 1 instead of fixed height for better adaptability
     width: '100%',
     justifyContent: 'space-between', // Distribute space between children
   },
   // Top carousel container - 20% of the parent container
   carouselContainer: {
-    height: '20%', // 20% of mainContainer
+    flex: 0.2, // 20% of mainContainer using flex
   },
   carouselTitle: {
     fontSize: 16,
@@ -40,14 +40,13 @@ export const styleSheet = StyleSheet.create({
   },
   // Image container
   imageContainer: {
-    height: '60%',
     borderRadius: 0,
     borderBottomLeftRadius: 100,
     borderBottomRightRadius: 100,
     paddingTop: 20,
     position: 'relative',
   },
-  // Transform button area - 20% of the parent container
+  // Transform button area
   transformButton: {
     zIndex: 10,
     padding: 15,
@@ -55,7 +54,15 @@ export const styleSheet = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 10,
-    height: '15%', // Slightly less than 20% to account for margins
+    backgroundColor: '#007AFF',
+    width: '100%',
+    height: 50,
+  },
+  emptyButtonSpace: {
+    // Match dimensions of the transform button for consistent layout
+    height: 50,
+    width: '100%',
+    marginTop: 10,
   },
   potHandleLeft: {
     position: 'absolute',

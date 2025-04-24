@@ -39,12 +39,27 @@ export const PhysicsStylePot = ({
   // Measure container dimensions
   const onContainerLayout = ({ nativeEvent: { layout } }: any) => {
     const { width, height } = layout;
-    setDimensions({ width, height });
     
-    // Create or update physics world boundaries when container size is known
-    if (width > 0 && height > 0) {
-      // Use exact height without adding extra pixels
-      setupPhysicsWorld(width, height);
+    // Only update if dimensions have actually changed
+    if (width !== dimensions.width || height !== dimensions.height) {
+      setDimensions({ width, height });
+      
+      // Recreate physics world when container size changes
+      if (width > 0 && height > 0) {
+        // Clean up existing physics world if it exists
+        if (engineRef.current && worldRef.current) {
+          if (requestRef.current) {
+            cancelAnimationFrame(requestRef.current);
+            requestRef.current = null;
+          }
+          Matter.World.clear(worldRef.current, false);
+          Matter.Engine.clear(engineRef.current);
+          engineRef.current = null;
+        }
+        
+        // Create new physics world with updated dimensions
+        setupPhysicsWorld(width, height);
+      }
     }
   };
 
@@ -80,6 +95,16 @@ export const PhysicsStylePot = ({
       Matter.Bodies.rectangle(width / 2, 0, width, 10, wallOptions),        // Top wall
     ];
     Matter.World.add(worldRef.current, walls);
+    
+    // Recreate all existing style circles
+    Object.keys(bodiesRef.current).forEach(id => {
+      delete bodiesRef.current[id];
+    });
+    
+    // Add all selected styles to the new physics world
+    selectedStyles.forEach(styleId => {
+      addCircleToPhysics(styleId);
+    });
     
     // Start the physics simulation
     startPhysicsSimulation();
@@ -218,7 +243,7 @@ export const PhysicsStylePot = ({
 
   // Update circles based on selectedStyles changes
   useEffect(() => {
-    if (!worldRef.current) return;
+    if (!worldRef.current || dimensions.width === 0 || dimensions.height === 0) return;
     
     // Add new styles that don't exist in circles
     selectedStyles.forEach(styleId => {

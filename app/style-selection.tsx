@@ -58,8 +58,8 @@ export default function StyleSelection() {
   );
 
   const navigateToKitchen = useCallback(() => {
-    // Navigate to gallery (kitchen) tab with the style and image params
-    router.navigate({
+    // Replace current screen with gallery (kitchen) tab to prevent back navigation
+    router.replace({
       pathname: '/(tabs)/gallery',
       params: {
         image,
@@ -120,7 +120,17 @@ export default function StyleSelection() {
         </View>
         
         {/* Animated pot container 60% height*/}
-        <Animated.View style={[{width: '100%' }, styleSheet.imageContainer, potExitAnimatedStyle]} onLayout={onPotLayout}>  
+        <Animated.View 
+          style={[
+            { 
+              width: '100%',
+              flex: 0.6, // Use flex instead of percentage height for more reliable sizing
+            }, 
+            styleSheet.imageContainer, 
+            potExitAnimatedStyle
+          ]} 
+          onLayout={onPotLayout}
+        >  
           <View style={styleSheet.potHandleLeft} />
           <View style={styleSheet.potHandleRight} />
           
@@ -154,18 +164,20 @@ export default function StyleSelection() {
         </Animated.View>
 
         {/* Cook button - 20% height */}
-        {selectedStyles.length > 0 ? (
-          <TouchableOpacity
-            style={[styleSheet.transformButton, { height: '20%' }]}
-            onPress={handleCook}
-          >
-            <Text style={styleSheet.transformButtonText}>
-              COOK
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={{flex: 0.2}} /> // Empty space holder when button isn't visible
-        )}
+        <View style={{flex: 0.2, justifyContent: 'center', alignItems: 'center'}}>
+          {selectedStyles.length > 0 ? (
+            <TouchableOpacity
+              style={[styleSheet.transformButton]}
+              onPress={handleCook}
+            >
+              <Text style={styleSheet.transformButtonText}>
+                COOK
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styleSheet.emptyButtonSpace} />
+          )}
+        </View>
       </View>
     </GestureHandlerRootView>
   );
