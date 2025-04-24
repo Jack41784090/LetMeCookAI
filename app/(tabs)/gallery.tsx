@@ -4,7 +4,9 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
-const DEFAULT_NUM_COLUMNS = 2; // Default number of columns for the grid
+const DEFAULT_NUM_COLUMNS = 3; // Default number of columns for the grid
+const DEFAULT_PADDING = 10; // Default padding for the grid items
+const DEFAULT_SPACING = 5; // Default spacing between grid items
 
 export default function GalleryScreen() {
   const { images, isLoading, refreshImages } = useLocalImages();
@@ -15,16 +17,14 @@ export default function GalleryScreen() {
 
   // Calculate proper item dimensions based on screen width and number of columns
   const getPhotoStyle = useCallback((columns: number) => {
-    const padding = 10; // Total horizontal padding per item
-    const spacing = 5 * 2; // Total margin between items (5pt on each side)
-    const availableWidth = windowWidth - (padding * 2); // Available width minus container padding
-    const itemWidth = (availableWidth / columns) - spacing;
+    const availableWidth = windowWidth - (DEFAULT_PADDING * 2); // Available width minus container padding
+    const itemWidth = (availableWidth / columns) - DEFAULT_SPACING * 2;
     
     return {
       width: itemWidth,
       height: itemWidth, // Keep 1:1 aspect ratio
       margin: 5,
-      borderRadius: 8,
+      borderRadius: 3,
     };
   }, [windowWidth]);
   
@@ -105,7 +105,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1a1a',
-    padding: 10,
+    padding: DEFAULT_PADDING,
+    paddingTop: 20,
   },
   center: {
     flex: 1,
@@ -121,9 +122,7 @@ const styles = StyleSheet.create({
     // Remove any padding that might interfere with our calculated widths
   },
   photoContainer: {
-    // Flex properties for item container
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // The photo style is now dynamically calculated in the getPhotoStyle function
 });
