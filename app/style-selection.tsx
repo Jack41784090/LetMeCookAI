@@ -17,41 +17,34 @@ export default function StyleSelection() {
   const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   
-  // Animation shared values for pot sliding
   const potTranslateX = useSharedValue(0);
   const potOpacity = useSharedValue(1);
   
-  // Get all available styles
   const allStyles = stylesData.getStyles();
-  
-  // Filtered styles for top carousel (available styles)
-  const availableStyles = allStyles.filter(style => !selectedStyles.includes(style.id));
-  
-  // Filtered styles for bottom carousel (selected styles)
-  const selectedStylesData = allStyles.filter(style => selectedStyles.includes(style.id));
-  
-  // Track the pot's position and dimensions
+  const availableStylesData = allStyles.filter(style => !selectedStyles.includes(style.id));  
+  const selectedStylesData = allStyles.filter(style => selectedStyles.includes(style.id));  
   const potLayout = useSharedValue<null | {x: number; y: number; width: number; height: number}>(null);
+  const potExitAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: potTranslateX.value }],
+      opacity: potOpacity.value,
+    };
+  });
   
-  // Handler for adding a style to selection
   const addSelectedStyle = (styleId: string) => {
     setSelectedStyles(prev => 
       prev.includes(styleId) ? prev : [...prev, styleId]
     );
   };
-  
-  // Handler for removing a style from selection
   const removeSelectedStyle = (styleId: string) => {
     setSelectedStyles(prev => prev.filter(id => id !== styleId));
   };
 
-  // Handle measuring the pot (image container)
   const onPotLayout = useCallback((event: LayoutChangeEvent) => {
     const { x, y, width, height } = event.nativeEvent.layout;
     potLayout.value = { x, y, width, height };
   }, [potLayout]);
 
-  // Use our custom hook for drag gesture handling
   const { 
     styles: allStylesWithGestures, 
     animatedStyles, 
@@ -64,7 +57,6 @@ export default function StyleSelection() {
     potLayout
   );
 
-  // Navigate to kitchen (gallery) after animation
   const navigateToKitchen = useCallback(() => {
     // Navigate to gallery (kitchen) tab with the style and image params
     router.navigate({
@@ -76,7 +68,6 @@ export default function StyleSelection() {
     });
   }, [router, image, selectedStyles]);
 
-  // Handler for cook button
   const handleCook = useCallback(() => {
     if (selectedStyles.length > 0) {
       // Animate the pot sliding right
@@ -87,16 +78,7 @@ export default function StyleSelection() {
       });
     }
   }, [selectedStyles, potTranslateX, navigateToKitchen]);
-
-  // Animated style for the pot container
-  const animatedPotStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: potTranslateX.value }],
-      opacity: potOpacity.value,
-    };
-  });
   
-  // Get animated style for a specific style ID
   const getAnimatedStyleForId = (styleId: string) => {
     const index = allStylesWithGestures.findIndex(s => s.id === styleId);
     return index >= 0 ? animatedStyles[index] : undefined;
@@ -113,10 +95,10 @@ export default function StyleSelection() {
             contentContainerStyle={styleSheet.carousel}
             style={{ alignSelf: 'center', width: '100%' }}
           >
-            {availableStyles.length === 0 ? (
+            {availableStylesData.length === 0 ? (
               <Text style={styleSheet.emptyMessage}>No available styles</Text>
             ) : (
-              availableStyles.map(style => {
+              availableStylesData.map(style => {
                 // Create gesture handler for this style
                 const gesture = createPanGesture(style.id);
                 const animStyle = getAnimatedStyleForId(style.id);
@@ -138,7 +120,7 @@ export default function StyleSelection() {
         </View>
         
         {/* Animated pot container 60% height*/}
-        <Animated.View style={[{width: '100%' }, styleSheet.imageContainer, animatedPotStyle]} onLayout={onPotLayout}>  
+        <Animated.View style={[{width: '100%' }, styleSheet.imageContainer, potExitAnimatedStyle]} onLayout={onPotLayout}>  
           <View style={styleSheet.potHandleLeft} />
           <View style={styleSheet.potHandleRight} />
           
@@ -174,7 +156,7 @@ export default function StyleSelection() {
         {/* Cook button - 20% height */}
         {selectedStyles.length > 0 ? (
           <TouchableOpacity
-            style={[styleSheet.transformButton, { flex: 0.2 }]}
+            style={[styleSheet.transformButton, { height: '20%' }]}
             onPress={handleCook}
           >
             <Text style={styleSheet.transformButtonText}>
