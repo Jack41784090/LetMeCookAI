@@ -3,7 +3,7 @@ import { PhysicsStylePot } from '@/utils/components/PhysicsStylePot';
 import { ProcessingImage, useAWSImageService } from '@/utils/services/AWSImageService';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Clock, GalleryHorizontal, PanelTop, Wand2 } from 'lucide-react-native';
+import { Clock, GalleryHorizontal, PanelTop, TicketCheck, Wand2 } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -32,13 +32,12 @@ export default function GalleryScreen() {
   const awsService = useAWSImageService();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'cooking' | 'gallery'>('cooking');
-  const [processedImages, setProcessedImages] = useState<ProcessingImage[]>([]);
-  const [clientDisplayImages, setClientDisplayImages] = useState<ProcessingImage[]>([]);
+  const [userImages, setUserImages] = useState<ProcessingImage[]>([]);
+  const [displayImages, setDisplayImages] = useState<ProcessingImage[]>([]);
   const [awsImagesLoaded, setAwsImagesLoaded] = useState(false);
   
   const shouldReloadImages = useRef(true);
   const serverRefreshTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const initialClientDisplaySet = useRef(false);
   const prevProcessedImagesRef = useRef<ProcessingImage[]>([]);
   
   DEBUG.log('GalleryScreen', 'Initial state', { 
@@ -84,19 +83,14 @@ export default function GalleryScreen() {
         addedLocal: addedLocalImages
       });
       
-      setProcessedImages(combinedImages);
-      
-      if (!initialClientDisplaySet.current) {
-        DEBUG.log('loadAllImages', 'Setting initial client display images');
-        setClientDisplayImages(combinedImages);
-        initialClientDisplaySet.current = true;
-      }
-      
+      setUserImages(combinedImages);
       setAwsImagesLoaded(true);
       shouldReloadImages.current = false;
     } catch (error) {
-      DEBUG.log('loadAllImages', 'Error loading images', error);
-      console.error('Error loading images:', error, awsService.error);
+      DEBUG.log('loadAllImages', 'Error loading images', {
+        error,
+        awsError: awsService.error
+      });
 
       // Fallback to local images
       const localImagesWithStatus = localImages.map(img => ({
@@ -104,14 +98,7 @@ export default function GalleryScreen() {
       }));
       DEBUG.log('loadAllImages', 'Fallback to local images', { count: localImagesWithStatus.length });
       
-      setProcessedImages(localImagesWithStatus);
-      
-      if (!initialClientDisplaySet.current) {
-        DEBUG.log('loadAllImages', 'Setting fallback client display images');
-        setClientDisplayImages(localImagesWithStatus);
-        initialClientDisplaySet.current = true;
-      }
-      
+      setUserImages(localImagesWithStatus)
       setAwsImagesLoaded(true);
       shouldReloadImages.current = false;
     }
@@ -127,15 +114,9 @@ export default function GalleryScreen() {
       return;
     }
 
-    // One-time initial load
-    const initialLoad = async () => {
-      DEBUG.log('ServerRefreshEffect', 'Performing initial image load');
-      shouldReloadImages.current = true;
-      await loadAllImages();
-    };
-    
-    // Only load images on the initial run
-    initialLoad();
+    DEBUG.log('ServerRefreshEffect', 'Performing initial image load');
+    shouldReloadImages.current = true;
+    loadAllImages();
     
     // Setup the timer for subsequent refreshes
     if (!serverRefreshTimerRef.current) {
@@ -155,17 +136,18 @@ export default function GalleryScreen() {
         serverRefreshTimerRef.current = null;
       }
     };
-  }, [isLoading]); // Remove loadAllImages from the dependency array
+  }, [isLoading]);
 
   // Client-side timer effect - updates every second
   useEffect(() => {
-    DEBUG.log('ClientTimerEffect', 'Timer effect initializing');
-    
-    // Create a stable interval that runs regardless of cooking images state changes
+    DEBUG.log('InitialRefresh', 'Refreshing images');
+    refreshImages(); 
+
+    DEBUG.log('ClientTimerEffect', 'Timer effect initializing');    
     const interval = setInterval(() => {
       DEBUG.log('ClientTimerEffect', 'Timer tick');
       
-      setClientDisplayImages(prevImages => {
+      setDisplayImages(prevImages => {
         // Check for cooking images on every tick
         const cookingImages = prevImages.filter(img => img.status === 'cooking');
         
@@ -217,17 +199,16 @@ export default function GalleryScreen() {
   // Sync server state to client display state
   useEffect(() => {
     DEBUG.log('ServerSyncEffect', 'Effect running', {
-      initialClientDisplaySet: initialClientDisplaySet.current,
-      processedImagesCount: processedImages.length
+      processedImagesCount: userImages.length
     });
     
-    if (!initialClientDisplaySet.current || processedImages.length === 0) {
+    if (userImages.length === 0) {
       DEBUG.log('ServerSyncEffect', 'Skipping, initial conditions not met');
       return;
     }
     
     // Check if processedImages has actually changed in a meaningful way
-    const hasChanged = processedImages.some((serverImage, index) => {
+    const hasChanged = userImages.some((serverImage, index) => {
       const prevImage = prevProcessedImagesRef.current[index];
       const changed = !prevImage || 
              prevImage.id !== serverImage.id || 
@@ -252,8 +233,8 @@ export default function GalleryScreen() {
     if (hasChanged) {
       DEBUG.log('ServerSyncEffect', 'Updating client display images');
       
-      setClientDisplayImages(prevClientImages => {
-        const newImages = processedImages.map(serverImage => {
+      setDisplayImages(prevClientImages => {
+        const newImages = userImages.map(serverImage => {
           const existingClientImage = prevClientImages.find(c => c.id === serverImage.id);
           
           // Status changed or new image - use server data
@@ -292,14 +273,8 @@ export default function GalleryScreen() {
     }
     
     // Update our reference of the previous processed images
-    prevProcessedImagesRef.current = processedImages;
-  }, [processedImages]);
-
-  // Initial refresh
-  useEffect(() => { 
-    DEBUG.log('InitialRefresh', 'Refreshing images');
-    refreshImages(); 
-  }, []);
+    prevProcessedImagesRef.current = userImages;
+  }, [userImages]);
 
   // Navigation handler
   const handleSelect = (item: ProcessingImage) => {
@@ -309,9 +284,9 @@ export default function GalleryScreen() {
 
   // Filter images by status
   const imagesByStatus = {
-    cooking: clientDisplayImages.filter(img => img.status === 'cooking'),
-    queued: clientDisplayImages.filter(img => img.status === 'queued'),
-    finished: clientDisplayImages.filter(img => img.status === 'finished')
+    cooking: displayImages.filter(img => img.status === 'cooking'),
+    queued: displayImages.filter(img => img.status === 'queued'),
+    finished: displayImages.filter(img => img.status === 'finished')
   };
   
   DEBUG.log('GalleryScreen', 'Images by status', {
@@ -391,6 +366,17 @@ export default function GalleryScreen() {
     );
   };
 
+  const renderTimeBadge = (item: ProcessingImage) => {
+    return item.timeRemaining ? (
+      <Text style={styles.timerText}>
+        Math.floor((item.timeRemaining || 0) / 60):
+        ((item.timeRemaining || 0) % 60).toString().padStart(2, '0')
+      </Text>
+    ): (
+      <TicketCheck style={styles.timerText}/>
+    )
+  }
+
   const renderCookingPot = (item: ProcessingImage) => {
     DEBUG.log('renderCookingPot', `Rendering pot for image ${item.id}`, { 
       timeRemaining: item.timeRemaining,
@@ -411,10 +397,7 @@ export default function GalleryScreen() {
           
           <View style={styles.timerContainer}>
             <Clock size={16} color="#fff" />
-            <Text style={styles.timerText}>
-              {Math.floor((item.timeRemaining || 0) / 60)}:
-              {((item.timeRemaining || 0) % 60).toString().padStart(2, '0')}
-            </Text>
+            {renderTimeBadge(item)}
           </View>
           
           <View style={styles.cookingIndicator}>
