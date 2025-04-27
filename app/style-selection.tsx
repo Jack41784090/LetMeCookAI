@@ -1,3 +1,4 @@
+import { useLocalImages } from '@/hooks/useLocalImages';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Sparkles } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
@@ -19,7 +20,8 @@ export default function StyleSelection() {
   
   const potTranslateX = useSharedValue(0);
   const potOpacity = useSharedValue(1);
-  
+
+  const { saveImage: saveImageToLocalStorage, deleteImage: deleteLocalImage } = useLocalImages();
   const allStyles = stylesData.getStyles();
   const availableStylesData = allStyles.filter(style => !selectedStyles.includes(style.id));  
   const selectedStylesData = allStyles.filter(style => selectedStyles.includes(style.id));  
@@ -58,7 +60,6 @@ export default function StyleSelection() {
   );
 
   const navigateToKitchen = useCallback(() => {
-    // Replace current screen with gallery (kitchen) tab to prevent back navigation
     router.replace({
       pathname: '/(tabs)/gallery',
       params: {
@@ -75,9 +76,10 @@ export default function StyleSelection() {
         // Callback after animation is complete
         potOpacity.value = withTiming(0, { duration: 200 });
         runOnJS(navigateToKitchen)();
+        runOnJS(saveImageToLocalStorage)(image, selectedStyles.join(','));
       });
     }
-  }, [selectedStyles, potTranslateX, navigateToKitchen]);
+  }, [selectedStyles, potTranslateX, navigateToKitchen, saveImageToLocalStorage, image]);
   
   const getAnimatedStyleForId = (styleId: string) => {
     const index = allStylesWithGestures.findIndex(s => s.id === styleId);

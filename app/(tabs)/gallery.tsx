@@ -369,8 +369,8 @@ export default function GalleryScreen() {
   const renderTimeBadge = (item: ProcessingImage) => {
     return item.timeRemaining ? (
       <Text style={styles.timerText}>
-        Math.floor((item.timeRemaining || 0) / 60):
-        ((item.timeRemaining || 0) % 60).toString().padStart(2, '0')
+        {Math.floor((item.timeRemaining || 0) / 60)}:
+        {((item.timeRemaining || 0) % 60).toString().padStart(2, '0')}
       </Text>
     ): (
       <TicketCheck style={styles.timerText}/>
