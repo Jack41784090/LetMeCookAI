@@ -1,3 +1,4 @@
+import { useAWSImageService } from '@/hooks/useAWSImageService';
 import { saveImageToLocalStorage } from '@/hooks/useLocalImages';
 import * as MediaLibrary from 'expo-media-library';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,22 +8,44 @@ import { useEffect, useState } from 'react';
 import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function Result() {
-  const { image, style } = useLocalSearchParams<{ image: string; style?: string }>();
+  const { image, style } = useLocalSearchParams<{ image: string; style: string }>();
   const router = useRouter();
   const [savedLocally, setSavedLocally] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const awsService = useAWSImageService();
 
-  // Save the image to local storage when component mounts
+  // Save the image to local storage and sync with AWS when component mounts
   useEffect(() => {
-    const saveToLocal = async () => {
+    const saveAndSync = async () => {
       try {
+        // Save locally first
         await saveImageToLocalStorage(image, style);
         setSavedLocally(true);
+
+        // Now try to sync with AWS
+        setSyncing(true);
+        const localImage = {
+          id: Date.now().toString(),
+          uri: image,
+          timestamp: Date.now(),
+          timeRemaining: null,
+          style
+        };
+        
+        try {
+          await awsService.uploadImageForProcessing(localImage, style);
+          console.log('Image successfully synced with AWS');
+        } catch (error) {
+          console.error('Failed to sync with AWS:', error);
+        } finally {
+          setSyncing(false);
+        }
       } catch (error) {
         console.error('Failed to save image locally:', error);
       }
     };
-    saveToLocal();
-  }, [image, style]);
+    saveAndSync();
+  }, [image, style, awsService]);
 
   const handleShare = async () => {
     try {
@@ -75,6 +98,7 @@ export default function Result() {
       {savedLocally && (
         <Text style={styles.savedText}>
           Image saved to app's gallery
+          {syncing && " (Syncing with cloud...)"}
         </Text>
       )}
 

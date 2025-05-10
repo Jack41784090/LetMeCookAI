@@ -1,6 +1,6 @@
+import { ProcessingImage, useAWSImageService } from '@/hooks/useAWSImageService';
 import { useLocalImages } from '@/hooks/useLocalImages';
 import { PhysicsStylePot } from '@/utils/components/PhysicsStylePot';
-import { ProcessingImage, useAWSImageService } from '@/utils/services/AWSImageService';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { Clock, GalleryHorizontal, PanelTop, TicketCheck, Wand2 } from 'lucide-react-native';
@@ -28,7 +28,7 @@ const DEBUG = {
 export default function GalleryScreen() {
   DEBUG.log('GalleryScreen', 'Component initializing');
   
-  const { images: localImages, isLoading, refreshImages } = useLocalImages();
+  const { images: localImages, isLoading, refreshImages, syncImagesWithServer } = useLocalImages();
   const awsService = useAWSImageService();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'cooking' | 'gallery'>('cooking');
@@ -61,29 +61,22 @@ export default function GalleryScreen() {
       const awsImages = await awsService.getImagesWithStatus();
       DEBUG.log('loadAllImages', 'AWS images received', { count: awsImages.length });
       
-      // Convert local images that aren't in AWS yet
-      DEBUG.log('loadAllImages', 'Processing local images');
-      const processedLocalImages = localImages.map(img => ({
-        ...img, status: 'finished' as const 
-      }));
+      // Extract server image IDs for synchronization
+      const serverImageIds = awsImages.map(img => img.id);
+      DEBUG.log('loadAllImages', 'Server image IDs', { ids: serverImageIds });
       
-      // Combine images, removing duplicates
-      const combinedImages = [...awsImages];
-      let addedLocalImages = 0;
-      processedLocalImages.forEach(localImg => {
-        if (!combinedImages.some(img => img.id === localImg.id)) {
-          combinedImages.push(localImg);
-          addedLocalImages++;
-        }
-      });
+      // Synchronize local storage with server data
+      // Delete local images that don't exist on the server
+      const deletedCount = await syncImagesWithServer(serverImageIds);
       
-      DEBUG.log('loadAllImages', 'Combined images', { 
-        total: combinedImages.length, 
-        fromAWS: awsImages.length, 
-        addedLocal: addedLocalImages
-      });
+      if (deletedCount > 0) {
+        // Refresh local images after sync
+        await refreshImages();
+        DEBUG.log('loadAllImages', `Refreshed local images after deleting ${deletedCount} not on server`);
+      }
       
-      setUserImages(combinedImages);
+      // Server data is the source of truth
+      setUserImages(awsImages);
       setAwsImagesLoaded(true);
       shouldReloadImages.current = false;
     } catch (error) {
@@ -92,17 +85,17 @@ export default function GalleryScreen() {
         awsError: awsService.error
       });
 
-      // Fallback to local images
+      // Fallback to local images if server is unavailable
       const localImagesWithStatus = localImages.map(img => ({
-        ...img, status: 'finished' as const
+        ...img, status: 'finished' as const, timeRemaining: 0,
       }));
       DEBUG.log('loadAllImages', 'Fallback to local images', { count: localImagesWithStatus.length });
       
-      setUserImages(localImagesWithStatus)
+      setUserImages(localImagesWithStatus);
       setAwsImagesLoaded(true);
       shouldReloadImages.current = false;
     }
-  }, [awsService, localImages]);
+  }, [awsService, localImages, refreshImages, syncImagesWithServer]);
 
   // Setup effects
   useEffect(() => {
@@ -136,7 +129,7 @@ export default function GalleryScreen() {
         serverRefreshTimerRef.current = null;
       }
     };
-  }, [isLoading]);
+  }, [isLoading, loadAllImages]);
 
   // Client-side timer effect - updates every second
   useEffect(() => {
@@ -252,8 +245,8 @@ export default function GalleryScreen() {
           const serverTime = serverImage.timeRemaining;
           
           const useClientTime = 
-            clientTime !== undefined && 
-            serverTime !== undefined && 
+            clientTime !== null && 
+            serverTime !== null && 
             clientTime < serverTime;
             
           DEBUG.log('ServerSyncEffect', `Time selection for image ${serverImage.id}`, {

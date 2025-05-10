@@ -9,7 +9,7 @@ export interface LocalImage {
   id: string;
   uri: string;
   timestamp: number;
-  style?: string;
+  style: string | null;
 }
 
 // Helper Functions
@@ -37,7 +37,7 @@ export const saveImageToLocalStorage = async (sourceUri: string, style?: string)
       id,
       uri: destinationUri,
       timestamp: Date.now(),
-      style
+      style: style || null
     };
     
     // Read existing metadata
@@ -95,6 +95,36 @@ export const deleteLocalImage = async (id: string) => {
   }
 };
 
+// Synchronized deletion of images not on server
+export const syncImagesWithServer = async (serverImageIds: string[]) => {
+  try {
+    const metadata = await getImagesMetadata();
+    const localImagesToDelete: string[] = [];
+    
+    // Find images in local storage that aren't in server data
+    metadata.forEach(localImage => {
+      if (!serverImageIds.includes(localImage.id)) {
+        localImagesToDelete.push(localImage.id);
+      }
+    });
+    
+    // Delete local images that don't exist on server
+    for (const imageId of localImagesToDelete) {
+      await deleteLocalImage(imageId);
+      console.log(`Synced: Deleted local image ${imageId} not found on server`);
+    }
+    
+    if (localImagesToDelete.length > 0) {
+      console.log(`Synced: Deleted ${localImagesToDelete.length} local images not found on server`);
+    }
+    
+    return localImagesToDelete.length;
+  } catch (error) {
+    console.error('Error syncing images with server:', error);
+    return 0;
+  }
+};
+
 // Hook for accessing images
 export const useLocalImages = () => {
   const [images, setImages] = useState<LocalImage[]>([]);
@@ -121,6 +151,7 @@ export const useLocalImages = () => {
     isLoading,
     refreshImages: loadImages,
     saveImage: saveImageToLocalStorage,
-    deleteImage: deleteLocalImage
+    deleteImage: deleteLocalImage,
+    syncImagesWithServer
   };
 };
